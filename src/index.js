@@ -12,6 +12,7 @@ app.use(express.json());
 
 const users = [];
 
+
 //Midleware de validação por username
 function checksExistsUserAccount(request, response, next) {
   const {username} = request.headers
@@ -37,14 +38,16 @@ app.post('/users', (request, response) => {
       response.status(400).send({error:"Username already exists!"})
     }
 
-    users.push({ 
+    const novoUsuario = { 
       id: uuidv4(), 
       name: name, 
       username: username, 
       todos: []
-    })
+    }
 
-  response.status(201).json(users[users.length -1])
+    users.push(novoUsuario)
+
+  response.status(201).json(novoUsuario)
 
 });
 
@@ -61,25 +64,21 @@ app.get('/todos',checksExistsUserAccount, (request, response) => {
 //Novo todo
 app.post('/todos', checksExistsUserAccount, (request, response) => {
     const {user} = request
+
     const {title, deadline} = request.body
+    
+  const todo =  { 
+    id: uuidv4(),
+    title: title,
+    done: false, 
+    deadline: new Date(deadline),
+    created_at: new Date
+  }
 
-    const index = users.findIndex(obj=>obj.username === user.username)
+    user.todos.push(todo)
+    
 
-    const dateDeadline = new Date(deadline + " 00:00")
-
-    const dateCreatedAt = new Date
-
-    users[index].todos.push(
-      { 
-        id: uuidv4(),
-        title: title,
-        done: false, 
-        deadline: dateDeadline.toDateString(), 
-        created_at: dateCreatedAt.toDateString()
-      }
-    )
-
-    response.status(201).json(user.todos)
+    response.status(201).json(todo)
 
 });
 
@@ -92,18 +91,16 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
 
     const {title, deadline} = request.body
 
-    const dateDeadline = new Date(deadline + " 00:00").toDateString()
-  
-    const index = user.todos.findIndex(obj=>obj.id === id)
+    const todo = user.todos.find(obj=>obj.id === id)
 
-    if(index < 0 ){
+    if(!todo){
       response.status(404).send({error:'Todo not found!'})
     }
 
-    user.todos[index].title = title
-    user.todos[index].deadline = dateDeadline
+    todo.title = title
+    todo.deadline = new Date(deadline)
 
-    response.status(201).json(user.todos[index])
+    response.status(201).json(todo)
 
 });
 
@@ -114,15 +111,15 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
 
   const {id} = request.params
 
-  const index = user.todos.findIndex(obj=>obj.id === id)
+  const todo = user.todos.find(obj=>obj.id === id)
 
-  if(index < 0 ){
+  if(!todo){
     response.status(404).send({error:'Todo not found!'})
   }
 
-  user.todos[index].done = true
+  todo.done = true
 
-  response.status(201).json(user.todos[index])
+  response.status(201).json(todo)
 
 });
 
