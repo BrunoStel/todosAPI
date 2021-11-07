@@ -10,27 +10,101 @@ app.use(cors());
 
 app.use(express.json());
 
-// const users = [];
+const users = [];
 
+//Midleware de validação por username
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers
+
+ const user = users.find(obj=>obj.username === username)
+
+ if(!user){
+   response.status(400).send({error:'Username not found!'})
+ }
+
+ request.user = user
+  
+ next()
+
 }
 
+
+//Cadastro de usuário
 app.post('/users', (request, response) => {
-  // Complete aqui
+    const {name, username} = request.body
+ 
+    if(users.some(obj=>obj.username === username)){
+      response.status(400).send({error:"Username already exists!"})
+    }
+
+    users.push({ 
+      id: uuidv4(), 
+      name: name, 
+      username: username, 
+      todos: []
+    })
+
+  response.status(201).json(users[users.length -1])
+
 });
 
-app.get('/todos', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+
+
+//Consultando todos do usuário
+app.get('/todos',checksExistsUserAccount, (request, response) => {
+  const { user } = request
+
+  response.status(200).json(user.todos)
 });
 
+
+//Novo todo
 app.post('/todos', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+    const {user} = request
+    const {title, deadline} = request.body
+
+    const index = users.findIndex(obj=>obj.username === user.username)
+
+    const dateDeadline = new Date(deadline + " 00:00")
+
+    const dateCreatedAt = new Date
+
+    users[index].todos.push(
+      { 
+        id: uuidv4(),
+        title: title,
+        done: false, 
+        deadline: dateDeadline.toDateString(), 
+        created_at: dateCreatedAt.toDateString()
+      }
+    )
+
+    response.status(201).json(user.todos)
+
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+    const {user} = request
+
+    const {id} = request.params
+
+    const {title, deadline} = request.body
+
+    const dateDeadline = new Date(deadline + " 00:00").toDateString()
+  
+    const index = user.todos.findIndex(obj=>obj.id === id)
+
+    if(index < 0 ){
+      response.status(400).send({error:'Todo not found!'})
+    }
+
+    user.todos[index].title = title
+    user.todos[index].deadline = dateDeadline
+
+    response.status(201).json(user.todos[index])
+
 });
+
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
   // Complete aqui
