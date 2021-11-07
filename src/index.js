@@ -19,7 +19,7 @@ function checksExistsUserAccount(request, response, next) {
  const user = users.find(obj=>obj.username === username)
 
  if(!user){
-   response.status(400).send({error:'Username not found!'})
+   response.status(404).send({error:'Username not found!'})
  }
 
  request.user = user
@@ -83,6 +83,8 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
 
 });
 
+
+//Modificando título e deadline do usuario
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
     const {user} = request
 
@@ -95,7 +97,7 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
     const index = user.todos.findIndex(obj=>obj.id === id)
 
     if(index < 0 ){
-      response.status(400).send({error:'Todo not found!'})
+      response.status(404).send({error:'Todo not found!'})
     }
 
     user.todos[index].title = title
@@ -106,12 +108,40 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
 });
 
 
+//Marcando um todo como done
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const {user} = request
+
+  const {id} = request.params
+
+  const index = user.todos.findIndex(obj=>obj.id === id)
+
+  if(index < 0 ){
+    response.status(404).send({error:'Todo not found!'})
+  }
+
+  user.todos[index].done = true
+
+  response.status(201).json(user.todos[index])
+
 });
 
+//Deletando um todo
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+  const {user} = request
+
+  const {id} = request.params
+
+  const index = user.todos.findIndex(obj=>obj.id === id)
+
+  if(index < 0 ){
+    response.status(404).send({error:'Todo not found!'})
+  }
+
+  user.todos.splice(index, 1)
+
+  response.status(204).send({message:'Todo deletado com sucesso!'})
+
 });
 
 
