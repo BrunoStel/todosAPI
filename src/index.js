@@ -17,6 +17,7 @@ const users = [];
 function checksExistsUserAccount(request, response, next) {
   const {username} = request.headers
 
+
  const user = users.find(obj=>obj.username === username)
 
  if(!user){
